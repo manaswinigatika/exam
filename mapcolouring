@@ -1,0 +1,54 @@
+# Define the graph as an adjacency list
+graph = {
+    'N': ['NW', 'M', 'NE'],
+    'NE': ['N', 'M', 'ME'],
+    'M': ['N', 'NW', 'MW', 'S', 'ME', 'NE'],
+    'NW': ['N', 'M', 'MW'],
+    'MW': ['NW', 'M', 'S'],
+    'ME': ['NE', 'M', 'S'],
+    'S': ['MW', 'M', 'ME', 'SE'],
+    'SE': ['S']
+}
+
+# Define the colors
+colors = ['Red', 'Green', 'Blue']
+
+# Function to check if the current color assignment is safe
+def is_safe(node, color, color_assignment):
+    for neighbor in graph[node]:
+        if color_assignment.get(neighbor) == color:
+            return False
+    return True
+
+# Function to solve the map coloring problem using backtracking
+def map_coloring(color_assignment):
+    # If all nodes are colored, return True
+    if len(color_assignment) == len(graph):
+        return True
+
+    # Get the next node to color
+    next_node = next((n for n in graph if n not in color_assignment), None)
+    if next_node is None:
+        return True
+
+    # Try each color for the current node
+    for color in colors:
+        if is_safe(next_node, color, color_assignment):
+            color_assignment[next_node] = color
+            if map_coloring(color_assignment):
+                return True
+            del color_assignment[next_node]
+
+    return False
+
+# Main function to initiate the coloring process
+def main():
+    color_assignment = {}
+    if map_coloring(color_assignment):
+        print("Color assignment:", color_assignment)
+    else:
+        print("No solution found")
+
+# Run the main function
+if __name__ == "__main__":
+    main()
