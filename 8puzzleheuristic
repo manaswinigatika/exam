@@ -1,0 +1,101 @@
+import heapq
+
+class PuzzleState:
+    def __init__(self, board, empty_pos, g=0, h=0):
+        self.board = board
+        self.empty_pos = empty_pos
+        self.g = g  # Cost from start to the current state
+        self.h = h  # Heuristic cost from the current state to the goal
+        self.f = g + h  # Total cost
+
+    def __lt__(self, other):
+        return self.f < other.f
+
+def manhattan_distance(board, goal):
+    distance = 0
+    for i in range(3):
+        for j in range(3):
+            if board[i][j] != 0:
+                x, y = divmod(board[i][j] - 1, 3)
+                distance += abs(x - i) + abs(y - j)
+    return distance
+
+def get_neighbors(state):
+    neighbors = []
+    x, y = state.empty_pos
+    directions = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
+
+    for dx, dy in directions:
+        if 0 <= dx < 3 and 0 <= dy < 3:
+            new_board = [row[:] for row in state.board]
+            new_board[x][y], new_board[dx][dy] = new_board[dx][dy], new_board[x][y]
+            neighbors.append(PuzzleState(new_board, (dx, dy)))
+
+    return neighbors
+
+def is_goal(state, goal):
+    return state.board == goal
+
+def print_board(board):
+    for row in board:
+        print(" ".join(str(num) if num != 0 else "_" for num in row))
+    print()
+
+def a_star_search(initial, goal):
+    empty_pos = next((i, j) for i in range(3) for j in range(3) if initial[i][j] == 0)
+    start_state = PuzzleState(initial, empty_pos, h=manhattan_distance(initial, goal))
+    open_set = []
+    heapq.heappush(open_set, start_state)
+    came_from = {}
+    g_score = {str(initial): 0}
+    closed_set = set()
+
+    while open_set:
+        current_state = heapq.heappop(open_set)
+
+        if is_goal(current_state, goal):
+            path = []
+            while current_state:
+                path.append(current_state.board)
+                current_state = came_from.get(str(current_state.board))
+            return path[::-1]
+
+        closed_set.add(str(current_state.board))
+
+        for neighbor in get_neighbors(current_state):
+            if str(neighbor.board) in closed_set:
+                continue
+
+            tentative_g_score = g_score[str(current_state.board)] + 1
+
+            if tentative_g_score < g_score.get(str(neighbor.board), float('inf')):
+                came_from[str(neighbor.board)] = current_state
+                g_score[str(neighbor.board)] = tentative_g_score
+                neighbor.g = tentative_g_score
+                neighbor.h = manhattan_distance(neighbor.board, goal)
+                neighbor.f = neighbor.g + neighbor.h
+                heapq.heappush(open_set, neighbor)
+
+    return None
+
+# Example usage
+initial_state = [
+    [2, 8, 3],
+    [1, 6, 4],
+    [7, 0, 5]
+]
+
+goal_state = [
+    [1, 2, 3],
+    [8, 0, 4],
+    [7, 6, 5]
+]
+
+solution_path = a_star_search(initial_state, goal_state)
+
+if solution_path:
+    print("Solution found!")
+    for state in solution_path:
+        print_board(state)
+else:
+    print("No solution exists.")
