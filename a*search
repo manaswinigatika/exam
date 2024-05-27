@@ -1,0 +1,57 @@
+import heapq
+
+# Define the graph and heuristic values
+graph = {
+    'S': [('A', 1), ('B', 5)],
+    'A': [('C', 3), ('D', 4), ('B', 2)],
+    'B': [('D', 3), ('E', 3)],
+    'C': [('B',4),('F', 5)],
+    'D': [('F', 6), ('E', 6), ('A', 4), ('B', 3)],
+    'E': [('G', 10)],
+    'F': [('G', 5)],
+    'G': []
+}
+
+heuristic = {
+    'S': 9,
+    'A': 8,
+    'B': 6,
+    'C': 7,
+    'D': 4,
+    'E': 6,
+    'F': 3,
+    'G': 0
+}
+
+def a_star_search(start, goal):
+    # Priority queue to store (cost, current_node, path)
+    open_list = [(heuristic[start], start, [start])]
+    heapq.heapify(open_list)
+    # Dictionary to store the best cost to reach each node
+    g_costs = {start: 0}
+
+    while open_list:
+        _, current, path = heapq.heappop(open_list)
+
+        # If the goal is reached, return the path and the cost
+        if current == goal:
+            return path, g_costs[current]
+
+        # Explore neighbors
+        for neighbor, cost in graph[current]:
+            new_cost = g_costs[current] + cost
+            if neighbor not in g_costs or new_cost < g_costs[neighbor]:
+                g_costs[neighbor] = new_cost
+                f_cost = new_cost + heuristic[neighbor]
+                heapq.heappush(open_list, (f_cost, neighbor, path + [neighbor]))
+
+    return None, float('inf')  # No path found
+
+# Run the A* search
+start_node = 'S'
+goal_node = 'G'
+path, cost = a_star_search(start_node, goal_node)
+
+# Print the results
+print(f"Path: {' -> '.join(path)}")
+print(f"Cost: {cost}")
