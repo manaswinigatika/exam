@@ -1,0 +1,79 @@
+import heapq
+
+class WaterJugProblem:
+    def __init__(self, a, b, d):
+        self.a = a
+        self.b = b
+        self.d = d
+
+    def is_goal(self, state):
+        return state[0] == self.d or state[1] == self.d
+
+    def heuristic(self, state):
+        return abs(self.d - state[0]) + abs(self.d - state[1])
+
+    def get_neighbors(self, state):
+        (x, y) = state
+        neighbors = []
+
+        # Fill jug a
+        neighbors.append((self.a, y))
+        # Fill jug b
+        neighbors.append((x, self.b))
+        # Empty jug a
+        neighbors.append((0, y))
+        # Empty jug b
+        neighbors.append((x, 0))
+        # Pour jug a -> jug b
+        pour_a_to_b = min(x, self.b - y)
+        neighbors.append((x - pour_a_to_b, y + pour_a_to_b))
+        # Pour jug b -> jug a
+        pour_b_to_a = min(y, self.a - x)
+        neighbors.append((x + pour_b_to_a, y - pour_b_to_a))
+
+        return neighbors
+
+    def a_star_search(self, start):
+        priority_queue = []
+        heapq.heappush(priority_queue, (0, start))
+        came_from = {}
+        cost_so_far = {start: 0}
+
+        while priority_queue:
+            current_priority, current_state = heapq.heappop(priority_queue)
+
+            if self.is_goal(current_state):
+                return self.reconstruct_path(came_from, start, current_state)
+
+            for neighbor in self.get_neighbors(current_state):
+                new_cost = cost_so_far[current_state] + 1  # All moves have a cost of 1
+                if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
+                    cost_so_far[neighbor] = new_cost
+                    priority = new_cost + self.heuristic(neighbor)
+                    heapq.heappush(priority_queue, (priority, neighbor))
+                    came_from[neighbor] = current_state
+
+        return None
+
+    def reconstruct_path(self, came_from, start, goal):
+        current = goal
+        path = [current]
+        while current != start:
+            current = came_from[current]
+            path.append(current)
+        path.reverse()
+        return path
+
+# Example usage
+a = 4  # Capacity of jug a
+b = 3  # Capacity of jug b
+d = 2  # Target amount
+
+problem = WaterJugProblem(a, b, d)
+start_state = (0, 0)
+solution = problem.a_star_search(start_state)
+
+if solution:
+    print("Solution path:", solution)
+else:
+    print("No solution found")
