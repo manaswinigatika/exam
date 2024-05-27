@@ -1,0 +1,78 @@
+import numpy as np
+
+# Define the grid world
+grid = [
+    [-0.04, -0.04, -0.04, +1],
+    [-0.04, None, -0.04, -1],
+    [-0.04, -0.04, -0.04, -0.04]
+]
+
+# Define the possible actions
+actions = ['U', 'D', 'L', 'R']
+action_effects = {
+    'U': (-1, 0),
+    'D': (1, 0),
+    'L': (0, -1),
+    'R': (0, 1)
+}
+
+# Transition probabilities
+p_intended = 0.8
+p_unintended = 0.1
+
+# Parameters
+gamma = 0.99  # Discount factor
+theta = 1e-4  # Convergence threshold
+
+def is_terminal(state):
+    return state == (0, 3) or state == (1, 3)
+
+def get_next_state(state, action):
+    next_state = (state[0] + action_effects[action][0], state[1] + action_effects[action][1])
+    if next_state[0] < 0 or next_state[0] >= len(grid) or next_state[1] < 0 or next_state[1] >= len(grid[0]) or grid[next_state[0]][next_state[1]] is None:
+        return state
+    return next_state
+
+def get_reward(state):
+    if state == (0, 3):
+        return 1
+    elif state == (1, 3):
+        return -1
+    else:
+        return -0.04
+
+def value_iteration(grid, actions, gamma, theta):
+    V = np.zeros((len(grid), len(grid[0])))
+    while True:
+        delta = 0
+        for i in range(len(grid)):
+            for j in range(len(grid[0])):
+                if grid[i][j] is None or is_terminal((i, j)):
+                    continue
+
+                v = V[i][j]
+                max_value = float('-inf')
+                for action in actions:
+                    intended_state = get_next_state((i, j), action)
+                    left_state = get_next_state((i, j), 'L' if action in ['U', 'D'] else 'U')
+                    right_state = get_next_state((i, j), 'R' if action in ['U', 'D'] else 'D')
+
+                    total_value = (p_intended * (get_reward(intended_state) + gamma * V[intended_state[0]][intended_state[1]]) +
+                                   p_unintended * (get_reward(left_state) + gamma * V[left_state[0]][left_state[1]]) +
+                                   p_unintended * (get_reward(right_state) + gamma * V[right_state[0]][right_state[1]]))
+
+                    max_value = max(max_value, total_value)
+
+                V[i][j] = max_value
+                delta = max(delta, abs(v - V[i][j]))
+
+        if delta < theta:
+            break
+    return V
+
+# Run value iteration
+V = value_iteration(grid, actions, gamma, theta)
+
+# Display the resulting values
+print("Value Function:")
+print(V)
