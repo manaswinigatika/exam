@@ -1,0 +1,21 @@
+def create_board():
+    board = [
+        ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
+        ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
+        [None] * 8,
+        [None] * 8,
+        [None] * 8,
+        [None] * 8,
+        ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
+        ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
+    ]
+    return board
+
+def display_board(board):
+    for row in board:
+        print(" | ".join(piece if piece is not None else "  " for piece in row))
+        print("-" * 33)
+
+# Create and display the board
+chess_board = create_board()
+display_board(chess_board)
